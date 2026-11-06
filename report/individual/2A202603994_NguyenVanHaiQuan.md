@@ -57,17 +57,6 @@ Embedding chịu được né từ khoá tốt hơn (83%) nhưng yếu ở *spam
 
 ## 5. Thử thách cá nhân
 
-**Đề #[...]:** [chép nguyên đề]
-
-**Cách làm:** [...]
-
-**Kết quả:**
-
-| [...] | [...] |
-|---|---|
-| [...] | [...] |
-
-**Giải thích:** [...]
 
 ## 6. Phương án cho sản phẩm thật
 
@@ -88,9 +77,11 @@ Yêu cầu: 10 triệu SMS/ngày (trung bình khoảng 116 tin/giây), p95 < 50 
 
 ## 7. AI log và điều đã học
 
-- Dùng AI hỗ trợ tra thông tin và trả lời các câu hỏi cá nhân.
-- Tìm kiếm các thông tin về thuật toán để xem mẫu và làm các TOTO
-- Tạo file report báo cáo này dựa trên các kết quả của notebook
+| Phần | Bạn hỏi AI gì (prompt) | AI trả lời/viết gì | Bạn đã sửa / kiểm chứng gì |
+| --- | --- | --- | --- |
+| Câu hỏi cá nhân (mục 3, 5, 6) | Hỏi AI tra cứu thông tin để trả lời các câu hỏi cá nhân | Giải thích khái niệm và gợi ý hướng trả lời | Đối chiếu với kết quả chạy notebook, viết lại câu trả lời theo ý mình |
+| Các TODO trong notebook | Hỏi về thuật toán (BoW, MLP, embedding, gọi LLM) để xem code mẫu | Đưa ra code mẫu và giải thích cách hoạt động | Chỉnh code cho khớp với dữ liệu của lab, chạy lại notebook để kiểm tra kết quả |
+| Báo cáo này | Nhờ AI tạo file report dựa trên kết quả của notebook | Viết bản nháp báo cáo theo template | Kiểm tra lại các con số (F1, độ trễ, chi phí) với output notebook và sửa phần phân tích |
 
 **Điều mình hiểu ra hôm nay:**
 1. Điểm cao trên tập test chưa chắc model đã hiểu bài toán. BoW + MLP đạt F1 = 1.0 trên SUB nhưng chỉ đúng 50% khi gặp tin cố tình đánh lừa.
