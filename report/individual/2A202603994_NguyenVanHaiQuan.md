@@ -10,30 +10,90 @@
 
 | Tệp | Có? |
 | --- | --- |
-| [`day01_lab.ipynb`](day01_lab.ipynb) — notebook đã chạy, còn output | ☐ |
-| [`lab1_report.json`](lab1_report.json) — do ô "Báo cáo cuối" sinh ra | ☐ |
-| [`hand_calc.jpg`](hand_calc.jpg) — ảnh tính tay có các bước | ☐ |
+| [`day01_lab.ipynb`](day01_lab.ipynb) — notebook đã chạy, còn output |  ✅ |
+| [`lab1_report.json`](lab1_report.json) — do ô "Báo cáo cuối" sinh ra |  ✅ |
+| [`hand_calc.jpg`](hand_calc.jpg) — ảnh tính tay có các bước |  ✅ |
 
 ## 2. Kết quả chính
 
-*Chép bảng so sánh cuối Phần 5 (F1 test, F1 SUB 40, p95 ms/tin, USD/1k tin) của chính bạn.*
+| Cách tiếp cận | F1 test | F1 SUB 40 | p95 ms/tin | USD / 1k tin |
+|---|---|---|---|---|
+| 1. BoW + LogReg (tự code) | 0.843 | 0.889 | 0.013 | 0 |
+| 2. BoW + MLP | 0.911 | 1.000 | 0.038 | 0 |
+| 3a. Encoder (MiniLM) + kNN | 0.905 | 0.976 | 60.3 | 0 |
+| 3b. Encoder (MiniLM) + LogReg | 0.931 | 1.000 | 6.0 | 0 |
+| 3c. Encoder (MiniLM) + MLP head | 0.929 | 1.000 | [...] | 0 |
+| 4a. LLM nhỏ zero-shot (gpt-6-luna) | — | 1.000 | 1 317 | 0.009 |
+| 4b. LLM lớn zero-shot (gpt-6.1-terra) | — | 1.000 | 1 764 | 0.091 |
+| 4c. LLM nhỏ few-shot | — | 1.000 | 1 345 | 0.021 |
+
+LLM chỉ chạy trên tập SUB (40 tin) để tiết kiệm chi phí, nên không có F1 trên toàn bộ test. Trên SUB, 6/8 cách đạt F1 = 1.0, nên SUB gần như không phân biệt được các cách với nhau. Nhìn F1 trên toàn bộ test thì Encoder + LogReg tốt nhất (0.931). Đường Pareto (1 − F1 theo độ trễ) chỉ gồm BoW + LogReg và BoW + MLP.
 
 ## 3. Dự đoán và thực tế
 
-*Chọn 3 dự đoán `predict(...)` lệch nhiều nhất so với kết quả. Mỗi cái: bạn đoán gì, ra gì, vì sao lệch.*
+**`ml_lr` — learning rate = 50.** Mình đoán loss sẽ dao động răng cưa và không hội tụ. Thực tế loss chỉ vọt lên khoảng 2.5 ở epoch đầu rồi giảm rất nhanh về 0.005, còn thấp hơn cả lr = 0.5. Lý do: loss của logistic regression có dạng "cái bát" chỉ có một đáy, nên dù bước quá đà thì gradient vẫn kéo về đúng hướng; feature lại chỉ là 0/1 nên mỗi bước không văng quá xa.
+
+**`emb_tricky` — 6 tin "ngụy trang".** Mình đoán Embedding sẽ thắng rõ (khoảng 5/6 so với 3/6). Thực tế BoW đúng 5/6, Embedding chỉ 4/6. BoW không bị chữ "free", "won", "prize" lừa như mình nghĩ, vì các từ rất "ham" như *I, me, my, lol* kéo xác suất xuống. Ngược lại, tin "complimentary holiday… Reply YES" thì BoW vẫn bắt được nhờ các từ *mobile, reply, yes*, còn Embedding lại để lọt. Cả hai cùng sai tin phishing "Your account rewards expire tonight", vì kiểu lừa đảo này gần như không có trong dữ liệu train.
+
+**`llm_models` — LLM nhỏ và lớn.** Mình đoán model lớn hơn model nhỏ một chút. Lần chạy đầu, cả 3 cách dùng LLM đều ra F1 = 0 với invalid = 40/40, vì `max_tokens = 3` quá ít khiến model trả về chuỗi rỗng. Mình kiểm tra thấy API vẫn chạy (ô "Say hello" với 20 token trả lời bình thường) và chi phí gần như chỉ có phần input, nên đổi `max_tokens` lên 20. Sau khi sửa, cả model nhỏ lẫn model lớn đều đạt F1 = 1.0, tức hoà nhau, trong khi model lớn đắt gấp khoảng 10 lần.
 
 ## 4. Phân tích 50 case khó
 
-*Model nào tụt nhiều nhất, ở nhóm case nào? Nêu 2 case cụ thể và cơ chế khiến model sai.*
+| Model | F1 SUB 40 | Accuracy 50 case khó |
+|---|---|---|
+| 1. BoW + LogReg | 0.889 | 54% |
+| 2. BoW + MLP | 1.000 | 50% |
+| 3a. Emb + kNN | 0.976 | 70% |
+| 3b. Emb + LogReg | 1.000 | 60% |
+| 3c. Emb + MLP head | 1.000 | 68% |
+| 4a / 4d. LLM nhỏ (thường / prompt phòng thủ) | 1.000 | 100% |
+
+Tụt nhiều nhất là **BoW + MLP**: từ F1 = 1.0 trên SUB xuống 50% trên bộ case khó, ngang đoán bừa. Nó đúng 0% ở hai nhóm *spam giọng tự nhiên* và *né từ khoá*. Hai case cụ thể:
+
+- **#29** *"C0ngr4tulat10ns! Y0u h4ve w0n a £1000 g1ft c4rd…"* (né từ khoá): khi thay chữ bằng số, các từ quen thuộc như "congratulations", "won", "gift" biến thành token lạ, không có trong vocab 2000 từ. Vector đầu vào gần như toàn 0, chỉ còn bias kéo về ham.
+- **#14** *"Hi, I'm working from home and making about £300 a day, happy to show you how…"* (spam giọng tự nhiên): câu viết như người quen kể chuyện, gồm toàn từ bình thường (*I, home, happy, you, me*). Những từ này kéo mạnh về phía ham, nên BoW không nhận ra đây là lừa việc làm.
+
+Embedding chịu được né từ khoá tốt hơn (83%) nhưng yếu ở *spam giọng tự nhiên* (10–30%) và *nói về spam* (25–50%), vì nó nhìn nghĩa chung của câu chứ không phân biệt được ai đang nói và nói để làm gì. LLM đúng 100% mọi nhóm, kể cả prompt injection, nên prompt phòng thủ (4d) không cải thiện thêm nhưng cũng không làm hỏng nhóm nào. Điều này cho thấy điểm cao trên tập test thường là quá lạc quan, vì test lấy cùng nguồn với train và chủ yếu là spam kiểu cũ.
 
 ## 5. Thử thách cá nhân
 
-*Đề theo SEED của bạn, cách làm, kết quả, giải thích.*
+**Đề #[...]:** [chép nguyên đề]
+
+**Cách làm:** [...]
+
+**Kết quả:**
+
+| [...] | [...] |
+|---|---|
+| [...] | [...] |
+
+**Giải thích:** [...]
 
 ## 6. Phương án cho sản phẩm thật
 
-*Với yêu cầu p95 < 50 ms/tin cho 10 triệu SMS/ngày: chọn phương án nào, dẫn số liệu nào, chấp nhận đánh đổi gì.*
+Yêu cầu: 10 triệu SMS/ngày (trung bình khoảng 116 tin/giây), p95 < 50 ms/tin.
+
+**Phương án chọn: Encoder (MiniLM) + LogReg (3b).**
+- Đạt SLA thoải mái: p95 = 6 ms.
+- F1 trên toàn bộ test cao nhất (0.931).
+- Xử lý được khoảng 1 290 tin/giây trên một máy, gấp hơn 10 lần lưu lượng trung bình, nên vài máy là đủ chịu giờ cao điểm.
+- Không tốn tiền API.
+
+**Vì sao không chọn các cách khác:**
+- BoW + MLP nhanh hơn (p95 0.04 ms) nhưng F1 thấp hơn (0.911) và rất dễ bị lừa (50% trên case khó).
+- Encoder + kNN có p95 = 60 ms, vượt SLA.
+- LLM chính xác nhất (100% trên case khó) nhưng p95 khoảng 1.3–1.8 giây, chậm hơn SLA hơn 25 lần. Nếu chạy cho toàn bộ 10 triệu tin bằng model nhỏ thì tốn khoảng $90–105/ngày, tức gần $3 000/tháng.
+
+**Đánh đổi chấp nhận:** 3b chỉ đúng 60% trên bộ case khó, nghĩa là spam giọng tự nhiên và lừa đảo kiểu mới vẫn lọt. Để bù lại, có thể thêm một lớp **router**: 3b xử lý trực tiếp những tin nó chắc chắn, còn tin "lưỡng lự" (xác suất 0.3–0.7, chỉ chiếm phần nhỏ) được gửi sang LLM kiểm tra lại *sau khi đã giao tin* (không chặn trên đường đi), hoặc dùng để gán nhãn thêm dữ liệu rồi train lại 3b định kỳ.
 
 ## 7. AI log và điều đã học
 
-*Mỗi lần dùng AI: hỏi gì, nhận gì, bạn sửa gì. Sau đó 2–3 câu: điều bạn hiểu ra hôm nay mà trước đó chưa hiểu.*
+- Dùng AI hỗ trợ tra thông tin và trả lời các câu hỏi cá nhân.
+- Tìm kiếm các thông tin về thuật toán để xem mẫu và làm các TOTO
+- Tạo file report báo cáo này dựa trên các kết quả của notebook
+
+**Điều mình hiểu ra hôm nay:**
+1. Điểm cao trên tập test chưa chắc model đã hiểu bài toán. BoW + MLP đạt F1 = 1.0 trên SUB nhưng chỉ đúng 50% khi gặp tin cố tình đánh lừa.
+2. Hệ thống dùng LLM có thể hỏng mà không báo lỗi: chỉ vì `max_tokens = 3`, cả model lớn nhất cũng ra F1 = 0, code vẫn chạy và vẫn tốn tiền. Phải luôn theo dõi tỉ lệ invalid.
+3. Chọn model cho sản phẩm thật là đánh đổi giữa chất lượng, độ trễ và chi phí, không phải cứ chọn model mạnh nhất. LLM tốt nhất về chất lượng nhưng không đáp ứng được 50 ms.
+
