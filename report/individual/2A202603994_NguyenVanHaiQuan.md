@@ -1,8 +1,6 @@
 # Báo cáo cá nhân — Day 01: Lọc tin nhắn rác bằng ML, DL, Embedding và LLM
 
-> Đổi tên file này thành `MSSV_HoTen.md` của bạn, ví dụ `2A20260000_NguyenVanAn.md`, rồi điền từng mục. Xoá các dòng hướng dẫn in nghiêng khi xong.
-
-- **MSSV: 2A20260000**
+- **MSSV: 2A202603994**
 - **Họ và tên: Nguyễn Văn Hải Quân**
 - **SEED** (in ở ô đầu notebook): 5234
 
@@ -18,16 +16,16 @@
 
 | Cách tiếp cận | F1 test | F1 SUB 40 | p95 ms/tin | USD / 1k tin |
 |---|---|---|---|---|
-| 1. BoW + LogReg (tự code) | 0.843 | 0.889 | 0.013 | 0 |
-| 2. BoW + MLP | 0.911 | 1.000 | 0.038 | 0 |
-| 3a. Encoder (MiniLM) + kNN | 0.905 | 0.976 | 60.3 | 0 |
-| 3b. Encoder (MiniLM) + LogReg | 0.931 | 1.000 | 6.0 | 0 |
-| 3c. Encoder (MiniLM) + MLP head | 0.929 | 1.000 | [...] | 0 |
-| 4a. LLM nhỏ zero-shot (gpt-6-luna) | — | 1.000 | 1 317 | 0.009 |
-| 4b. LLM lớn zero-shot (gpt-6.1-terra) | — | 1.000 | 1 764 | 0.091 |
-| 4c. LLM nhỏ few-shot | — | 1.000 | 1 345 | 0.021 |
+| 1. BoW + LogReg (tự code) | 0.843 | 0.889 | 0.014 | 0 |
+| 2. BoW + MLP | 0.911 | 1.000 | 0.039 | 0 |
+| 3a. Encoder (MiniLM) + kNN | 0.905 | 0.976 | 16.3 | 0 |
+| 3b. Encoder (MiniLM) + LogReg | 0.931 | 1.000 | 5.4 | 0 |
+| 3c. Encoder (MiniLM) + MLP head | 0.929 | 1.000 | 5.3 | 0 |
+| 4a. LLM nhỏ zero-shot (gpt-6-luna) | — | 1.000 | 1 940 | 0.009 |
+| 4b. LLM lớn zero-shot (gpt-6.1-terra) | — | 1.000 | 1 534 | 0.091 |
+| 4c. LLM nhỏ few-shot | — | 1.000 | 1 236 | 0.021 |
 
-LLM chỉ chạy trên tập SUB (40 tin) để tiết kiệm chi phí, nên không có F1 trên toàn bộ test. Trên SUB, 6/8 cách đạt F1 = 1.0, nên SUB gần như không phân biệt được các cách với nhau. Nhìn F1 trên toàn bộ test thì Encoder + LogReg tốt nhất (0.931). Đường Pareto (1 − F1 theo độ trễ) chỉ gồm BoW + LogReg và BoW + MLP.
+LLM chỉ chạy trên tập SUB (40 tin) để tiết kiệm chi phí, nên không có F1 trên toàn bộ test. Trên SUB, 6/8 cách đạt F1 = 1.0, nên SUB gần như không phân biệt được các cách với nhau. Nhìn F1 trên toàn bộ test thì Encoder + LogReg tốt nhất (0.931). Đường Pareto (1 − F1 theo độ trễ) chỉ gồm BoW + LogReg và BoW + MLP. Có 5 cách đạt SLA p95 < 50 ms: cả hai cách BoW và cả ba cách Encoder (3a, 3b, 3c); cả ba cách LLM đều không đạt.
 
 ## 3. Dự đoán và thực tế
 
@@ -76,15 +74,15 @@ Embedding chịu được né từ khoá tốt hơn (83%) nhưng yếu ở *spam
 Yêu cầu: 10 triệu SMS/ngày (trung bình khoảng 116 tin/giây), p95 < 50 ms/tin.
 
 **Phương án chọn: Encoder (MiniLM) + LogReg (3b).**
-- Đạt SLA thoải mái: p95 = 6 ms.
+- Đạt SLA thoải mái: p95 = 5.4 ms.
 - F1 trên toàn bộ test cao nhất (0.931).
-- Xử lý được khoảng 1 290 tin/giây trên một máy, gấp hơn 10 lần lưu lượng trung bình, nên vài máy là đủ chịu giờ cao điểm.
+- Xử lý được khoảng 1 237 tin/giây trên một máy, gấp hơn 10 lần lưu lượng trung bình, nên vài máy là đủ chịu giờ cao điểm.
 - Không tốn tiền API.
 
 **Vì sao không chọn các cách khác:**
 - BoW + MLP nhanh hơn (p95 0.04 ms) nhưng F1 thấp hơn (0.911) và rất dễ bị lừa (50% trên case khó).
-- Encoder + kNN có p95 = 60 ms, vượt SLA.
-- LLM chính xác nhất (100% trên case khó) nhưng p95 khoảng 1.3–1.8 giây, chậm hơn SLA hơn 25 lần. Nếu chạy cho toàn bộ 10 triệu tin bằng model nhỏ thì tốn khoảng $90–105/ngày, tức gần $3 000/tháng.
+- Encoder + kNN cũng đạt SLA (p95 = 16.3 ms) nhưng F1 thấp hơn (0.905), chậm gấp khoảng 3 lần 3b và chỉ xử lý được khoảng 346 tin/giây, tức chỉ gấp khoảng 3 lần lưu lượng trung bình, ít dư cho giờ cao điểm.
+- LLM chính xác nhất (100% trên case khó) nhưng p95 khoảng 1.2–1.9 giây, chậm hơn SLA khoảng 25–39 lần. Nếu chạy cho toàn bộ 10 triệu tin bằng model nhỏ zero-shot thì tốn khoảng $90/ngày, tức khoảng $2 700/tháng; few-shot khoảng $6 200/tháng; model lớn khoảng $27 000/tháng.
 
 **Đánh đổi chấp nhận:** 3b chỉ đúng 60% trên bộ case khó, nghĩa là spam giọng tự nhiên và lừa đảo kiểu mới vẫn lọt. Để bù lại, có thể thêm một lớp **router**: 3b xử lý trực tiếp những tin nó chắc chắn, còn tin "lưỡng lự" (xác suất 0.3–0.7, chỉ chiếm phần nhỏ) được gửi sang LLM kiểm tra lại *sau khi đã giao tin* (không chặn trên đường đi), hoặc dùng để gán nhãn thêm dữ liệu rồi train lại 3b định kỳ.
 
