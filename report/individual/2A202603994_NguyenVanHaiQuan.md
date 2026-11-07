@@ -93,6 +93,9 @@ Yêu cầu: 10 triệu SMS/ngày (trung bình khoảng 116 tin/giây), p95 < 50 
 | Câu hỏi cá nhân (mục 3, 5, 6) | Hỏi AI tra cứu thông tin để trả lời các câu hỏi cá nhân | Giải thích khái niệm và gợi ý hướng trả lời | Đối chiếu với kết quả chạy notebook, viết lại câu trả lời theo ý mình |
 | Các TODO trong notebook | Hỏi về thuật toán (BoW, MLP, embedding, gọi LLM) để xem code mẫu | Đưa ra code mẫu và giải thích cách hoạt động | Chỉnh code cho khớp với dữ liệu của lab, chạy lại notebook để kiểm tra kết quả |
 | Báo cáo này | Nhờ AI tạo file report dựa trên kết quả của notebook | Viết bản nháp báo cáo theo template | Kiểm tra lại các con số (F1, độ trễ, chi phí) với output notebook và sửa phần phân tích |
+| Rà soát bài và cập nhật số liệu | Nhờ AI rà các phần còn thiếu, đối chiếu số liệu câu trả lời với output lần chạy mới, cập nhật báo cáo theo số mới | Danh sách chỗ thiếu / sai số liệu; cập nhật bảng kết quả (mục 2) và phương án sản phẩm (mục 6) | Tự sửa các câu trả lời trong notebook; kiểm tra lại số trong báo cáo với output notebook |
+| Bonus: side lab LLM API | Nhờ AI chạy bài tập temperature (gọi API thật) và soạn câu trả lời cho `docs/optional-llm-api-exercises.md` | Kết quả 4 mức temperature, phép tính chi phí terra/luna, đoạn văn về streaming | Đọc lại, đối chiếu với output thật và kết quả lab chính; `solution.py` chạy qua 19/19 test |
+| Bonus: `MY_CASES` | Case do mình tự nghĩ; nhờ AI soạn nhận xét từ bảng kết quả từng case | Bảng tổng hợp + nhận xét model nào bị lừa ở case nào và vì sao | Đối chiếu với bảng True/False của notebook, chỉnh lại câu chữ |
 
 **Điều mình hiểu ra hôm nay:**
 1. Điểm cao trên tập test chưa chắc model đã hiểu bài toán. BoW + MLP đạt F1 = 1.0 trên SUB nhưng chỉ đúng 50% khi gặp tin cố tình đánh lừa.
