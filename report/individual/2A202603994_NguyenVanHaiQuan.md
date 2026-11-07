@@ -57,6 +57,19 @@ Embedding chịu được né từ khoá tốt hơn (83%) nhưng yếu ở *spam
 
 ## 5. Thử thách cá nhân
 
+**Đề #3:** DL · Đổi lớp ẩn MLP thành 4 và 512 nơ-ron. Báo số tham số, F1 test, thời gian train. Khi nào nên chọn mạng nhỏ?
+
+**Cách làm:** Dùng lại `build_mlp` và `train_mlp` của Phần 2, chạy vòng lặp với `hidden` = 4, 64 (mốc so sánh) và 512. Giữ cùng 30 epoch và cùng `SEED` để chỉ có kích thước lớp ẩn thay đổi. Đo thời gian bằng `time.perf_counter()`, đếm tham số bằng `p.numel()`, và kiểm tra lại bằng công thức 2000·h + 2h + 1.
+
+**Kết quả:**
+
+| Lớp ẩn | Tham số | Precision | Recall | F1 test | Train (s) |
+|---|---|---|---|---|---|
+| 4 | 8 009 | 0.978 | 0.854 | 0.912 | 0.54 |
+| 64 | 128 129 | 0.989 | 0.845 | 0.911 | 0.64 |
+| 512 | 1 025 025 | 1.000 | 0.845 | 0.916 | 3.69 |
+
+**Giải thích:** Tăng từ 4 lên 512 nơ-ron làm số tham số gấp ~128 lần và thời gian train gấp ~7 lần, nhưng F1 gần như không đổi (0.912 → 0.916, chênh khoảng 1 tin). Với input bag-of-words, vài từ khoá đã đủ để tách spam và ham, nên mạng rất nhỏ đã học được gần hết những gì có thể học. Nên chọn mạng nhỏ khi nó cho chất lượng gần bằng mạng lớn, khi dữ liệu ít (dễ overfit), hoặc khi cần chạy nhanh, rẻ, ít bộ nhớ.
 
 ## 6. Phương án cho sản phẩm thật
 
